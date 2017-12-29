@@ -5,10 +5,11 @@
 #' @return dataframe with columns k (from 1 to K) and column col
 #' @export
 #' @examples 
-#' ch <- get_pal(10)
+#' ch <- get_pal(6)
 #' ch %>% ggplot() + 
 #'    geom_tile(aes(x=1, y = 1, fill=col)) + 
-#'    scale_fill_identity() + facet_wrap(~k)
+#'    scale_fill_identity() + facet_wrap(~k) +
+#'    ggthemes::theme_map()
 #'
 #' # colours from a luminous shade:
 #' ls <- get_pal(5, "luminous shade")
@@ -42,10 +43,11 @@
 #'   theme_bw() + theme(aspect.ratio=1)
 get_pal <- function(K, palette = "changes") {
   library(tidyverse)
-  load("data/ga_pal_cont.rda")
   
   if (is.character(palette)) {
-    # check that palette is a valid name
+    load("data/ga_pal_cont.rda")
+
+    # still need to check that palette is a valid name
     clust <- ga_pal_cont[[palette]]$clust
     subframe <- ga_pal_cont[[palette]]$data
   }
@@ -57,9 +59,9 @@ get_pal <- function(K, palette = "changes") {
 # get cluster object by name
 subframe$k <- cutree(clust, k=K)
 tiles <- subframe %>% group_by(k) %>% summarize(
-  red=mean(red),
-  blue=mean(blue),
-  green=mean(green)
+  red=median(red),
+  blue=median(blue),
+  green=median(green)
 ) %>% mutate(
   col = rgb(red/255, green/255, blue/255)
 )
@@ -74,6 +76,7 @@ tiles
 #' @param jpgfile name of the image from which the color palette is to be extracted
 #' @param limit number of sample points to be extracted from the image
 #' @return cluster object
+#' @importFrom raster raster
 #' @export
 #' @examples 
 #' rc <- make_palette("https://s3.amazonaws.com/img.aasd.com.au/05574461.jpg")
@@ -92,16 +95,15 @@ tiles
 #' get_pal(10, gs) %>% ggplot() + 
 #'    geom_tile(aes(x=1, y = 1, fill=col)) + 
 #'    scale_fill_identity() + facet_wrap(~k)
-
 #' # now add to internal data object to make it accessible for future use
 make_palette <- function(jpgfile, limit=1000) {
-  library(raster)
-  library(rgdal)
-  
+#  library(raster)
+#  library(rgdal)
+
   cat("# reading red, green, and blue bands ...\n")
-  red <- raster(jpgfile, band=1)
-  green <- raster(jpgfile, band=2)
-  blue <- raster(jpgfile, band=3)
+  red <- raster::raster(jpgfile, band=1)
+  green <- raster::raster(jpgfile, band=2)
+  blue <- raster::raster(jpgfile, band=3)
   #par(mfrow=c(3,1))
   #plot(red)
   #plot(green)

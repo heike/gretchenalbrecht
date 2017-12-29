@@ -18,9 +18,40 @@ dataframe with columns k (from 1 to K) and column col
 Get k colors from a named color palette
 }
 \examples{
+ch <- get_pal(6)
+ch \%>\% ggplot() + 
+   geom_tile(aes(x=1, y = 1, fill=col)) + 
+   scale_fill_identity() + facet_wrap(~k) +
+   ggthemes::theme_map()
+
 # colours from a luminous shade:
 ls <- get_pal(5, "luminous shade")
 ls \%>\% ggplot() + 
    geom_tile(aes(x=1, y = 1, fill=col)) + 
    scale_fill_identity() + facet_wrap(~k)
+   
+# colours from rocker:
+ro <- get_pal(6, "rocker")
+ro \%>\% ggplot() + 
+   geom_tile(aes(x=1, y = 1, fill=col)) + 
+   scale_fill_identity() + facet_wrap(~k)
+
+# colours from rosa concorde:
+rc <- get_pal(6, "rosa concorde")
+rc \%>\% ggplot() + 
+   geom_tile(aes(x=1, y = 1, fill=col)) + 
+   scale_fill_identity() + facet_wrap(~k)
+
+
+ggplot(diamonds_small,
+  aes(x=carat, price, colour=cut)) +
+  geom_point(size=4) +
+  scale_colour_manual(values = ro$col[-4]) +
+  theme_bw() + theme(aspect.ratio=1)
+
+ggplot(diamonds_small,
+  aes(x=carat, price, colour=cut)) +
+  geom_point(size=4) +
+  scale_colour_gretchenalbrecht("rocker") +
+  theme_bw() + theme(aspect.ratio=1)
 }

@@ -16,4 +16,8 @@ Already existing palettes will be updated, new palettes will be added to the `ga
 }
 \examples{
 gretchenalbrecht:::add_palette("pictures/gretchen-albrecht-changes.jpg", "changes")
+gretchenalbrecht:::add_palette("pictures/gretchen-albrecht-luminous-shade-811.jpg", "luminous shade")
+gretchenalbrecht:::add_palette("pictures/gretchen-albrecht-rocker.jpg", "rocker")
+gretchenalbrecht:::add_palette("pictures/gretchen-albrecht-rocker.jpg", "rocker")
+gretchenalbrecht:::add_palette("pictures/gretchen-albrecht-rosa-concorde.jpg", "rosa concorde")
 }
