@@ -1,5 +1,5 @@
 ---
-title: "Creating Palettes from JPGs"
+title: "Colors like a Grey Sky Winter"
 author: "Heike Hofmann"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -9,19 +9,22 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
+```{r setup, include = FALSE, message=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+library(tidyverse)
 ```
 
 Grey Sky Winter is one of Gretchen Albrecht's paintings from 1972 (acrylic on canvas).
 ![](https://s3.amazonaws.com/img.aasd.com.au/52775868.jpg)
 
+The goal is to find a colour palette that captures the colours of this painting to be used in a colour palette. 
+The approach we take here is to take a sample of colour points from the painting, cluster it, and return an object from which we can draw a specified set of colours.
+
 The `make_palette` command takes a link to a jpeg file and creates a cluster object based on the rgb values of the image. For computational feasibility only a sample of points is taken. By default, this sample is of size 1000, this can be changed by re-setting the value of `limit` in `make_palette`.
 ```{r}
-library(tidyverse)
 library(gretchenalbrecht)
 gsw <- make_palette("https://s3.amazonaws.com/img.aasd.com.au/52775868.jpg")
 gsw$name <- "grey sky winter"
@@ -37,7 +40,7 @@ gsw$data$y <- gsw$data$id %/% 350
 gsw$data %>% ggplot(aes(x, -y, colour= colour)) + geom_point() +scale_colour_identity() + coord_equal()
 ```
 
-From the newly created palette we can extract a set number of colours using the command `get_pal(pal, K)`, where `pal` is either the named palette or the palette object, and `K` specifies the number of colours we want. 
+From the newly created palette we can extract a set number of colours using the command `get_pal(pal, K)`, where `pal` is either the named palette or the palette object, and `K` specifies the number of colours to be extracted. 
 
 In the example below, we are comparing the first 30 palettes to each other. It is interesting that this data driven method of extracting colours for each group results in fairly stable colours that reflect the original painting quite well.
 
@@ -61,11 +64,11 @@ cols %>%
 
 Let's play the same game with a different painting, e.g. with Gretchen Albrecht's 2012 painting Oceanic:
 
-```{r}
+```{r, message = FALSE}
 oc <- make_palette("https://artinfo-images-350.s3.amazonaws.com/asi2-130920/175.jpg")
 oc$name <- "oceanic"
 ```
-```{r}
+```{r, echo = FALSE}
 cols <- list()
 for (i in 1:30) {
   cols[[i]] <- get_pal(i, oc) 
@@ -90,30 +93,26 @@ While this approach promising, there are a couple of reasons, why we should not 
 An obvious drawback of the automatic approach is that each painting has a background colour, which is quite dominant. The background colour generally has not very strong contrast to the either white or grey, the standard backgrounds colours in `ggplot2`, which renders this 'colour' choice to be an 'un-colour'. 
 
 
-Another drawback is that, as each of the colours in the palette, which in turn is based on a clustering method, the colours are inherently un-ordered. However, we perceive shades of the same hue, such as for example the shades of blue in the example below, as ordered (refer to tests for colour acuity?). 
+Another drawback is that, as each of the colours in the palette, which in turn is based on a clustering method, the colours are inherently un-ordered. However, we perceive shades of the same hue, such as for example the shades of blue in the example below, as ordered. In fact, tests for colour acuity are based on our ability to order colours according to their luminance in different hues.
 While similar hues imply similarity of objects, objects with very different hues imply a stark contrast between them, which might not be present in the data. 
 
-```{r}
+```{r, message=FALSE}
 sg <- make_palette("https://artinfo-images-350.s3.amazonaws.com/asi2-126395/346.jpg")
 sg$name <- "soft grey"
 ```
 
 ```{r}
-cols <- list()
-for (i in 1:30) {
-  cols[[i]] <- get_pal(i, sg) 
-}
-cols <- cols %>% purrr::map_df(.f = function(x) {
-  x$K = nrow(x)
-  x
-})
-cols %>% 
-  ggplot(aes(x = k, y = K)) + 
-  geom_tile(aes(fill=col)) + 
+cols6 <- get_pal(6, sg) 
+
+cols6 %>% 
+  ggplot(aes(x=1, y=1)) + 
+  geom_tile(aes(fill=col)) + facet_wrap(~k) +
   scale_fill_identity() + 
   theme(legend.position="none") +
-  theme_bw() +
-  ylab("Number of colours in palette")
+  theme_bw() + coord_equal() +
+  theme(axis.title =element_blank(), axis.text=element_blank(),
+        axis.ticks = element_blank()) +
+  geom_text(x=1, y=1, aes(label=col))
 ```
 
 
@@ -123,7 +122,7 @@ cols %>%
 
 Internally, the clustering object returns `K` groups. For each group, a single colour is determined as the median of the red, green, and blue values. Using the median rather than the mean creates colours that seem to be a bit truer to the original colours in the image file. 
 
-```{r}
+```{r, message = FALSE, fig.width=8, fig.height = 4}
 ct <- make_palette("https://artinfo-images-350.s3.amazonaws.com/asi2-123709/221.jpg")
 ct$name <- "cataract"
 ct$data$k <- cutree(ct$clust, 10)
@@ -139,7 +138,7 @@ cataract <- ct$data %>%
 
 cataract %>% ggplot(aes(x = channel, y = value, colour = col)) +
   theme_bw() + geom_line(aes(group=id), size=0.25, alpha=0.5) + scale_colour_identity() +
-  facet_wrap(~k) + geom_line(group=1, size=2, data = tiles)
+  facet_wrap(~k, ncol=5) + geom_line(group=1, size=2, data = tiles)
   
 ```
 
