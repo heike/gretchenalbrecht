@@ -120,15 +120,20 @@ cols6 %>%
 ![](https://artinfo-images-350.s3.amazonaws.com/asi2-126395/346.jpg)
 
 
-Internally, the clustering object returns `K` groups. For each group, a single colour is determined as the median of the red, green, and blue values. Using the median rather than the mean creates colours that seem to be a bit truer to the original colours in the image file. 
+Internally, the clustering object returns `K` groups. For each group, a single colour is determined as the median of the red, green, and blue values. Using the median or mean does not result in huge differences. 
 
-```{r, message = FALSE, fig.width=8, fig.height = 4}
+```{r, message = FALSE, fig.width=8, fig.height = 4, fig.cap="Data and colours for a palette of size ten based on the painting 'Cataract'. Thin lines correspond to the 1000 data points sampled from the painting, thick lines show colours based on mean and median for each of the ten clusters."}
 ct <- make_palette("https://artinfo-images-350.s3.amazonaws.com/asi2-123709/221.jpg")
 ct$name <- "cataract"
 ct$data$k <- cutree(ct$clust, 10)
 
-tiles <- ct$data %>% group_by(k) %>% 
+tilesMedian <- ct$data %>% group_by(k) %>% 
   summarize(red=median(red), blue=median(blue), green=median(green)) %>%
+  mutate(col=rgb(red/255, green/255, blue/255)) %>% 
+  gather(channel, value, red:green)
+
+tilesMean <- ct$data %>% group_by(k) %>% 
+  summarize(red=mean(red), blue=mean(blue), green=mean(green)) %>%
   mutate(col=rgb(red/255, green/255, blue/255)) %>% 
   gather(channel, value, red:green)
 
@@ -138,28 +143,45 @@ cataract <- ct$data %>%
 
 cataract %>% ggplot(aes(x = channel, y = value, colour = col)) +
   theme_bw() + geom_line(aes(group=id), size=0.25, alpha=0.5) + scale_colour_identity() +
-  facet_wrap(~k, ncol=5) + geom_line(group=1, size=2, data = tiles)
+  facet_wrap(~k, ncol=5) + 
+  geom_line(group=1, size=2, data = tilesMean) +
+  geom_line(group=1, size=2, data = tilesMedian)
   
 ```
 
 
 
-```{r}
-cols <- list()
+```{r, echo = FALSE}
+cols1 <- list()
+cols2 <- list()
 for (i in 1:30) {
-  cols[[i]] <- get_pal(i, ct) 
+  cols1[[i]] <- get_pal(i, ct, fun=median) 
+  cols2[[i]] <- get_pal(i, ct, fun=mean) 
 }
-cols <- cols %>% purrr::map_df(.f = function(x) {
+cols1 <- cols1 %>% purrr::map_df(.f = function(x) {
   x$K = nrow(x)
   x
 })
-cols %>% 
+cols2 <- cols2 %>% purrr::map_df(.f = function(x) {
+  x$K = nrow(x)
+  x
+})
+cols1 %>% 
   ggplot(aes(x = k, y = K)) + 
   geom_tile(aes(fill=col)) + 
   scale_fill_identity() + 
   theme(legend.position="none") +
   theme_bw() +
-  ylab("Number of colours in palette")
+  ylab("Number of colours in palette") + ggtitle("Colours based on median")
+cols2 %>% 
+  ggplot(aes(x = k, y = K)) + 
+  geom_tile(aes(fill=col)) + 
+  scale_fill_identity() + 
+  theme(legend.position="none") +
+  theme_bw() +
+  ylab("Number of colours in palette") + ggtitle("Colours based on mean")
 ```
 
 ![](https://artinfo-images-350.s3.amazonaws.com/asi2-123709/221.jpg)
+
+

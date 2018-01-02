@@ -4,12 +4,14 @@
 \alias{get_pal}
 \title{Get k colors from a named color palette}
 \usage{
-get_pal(K, palette = "changes")
+get_pal(K, palette = "changes", fun = median)
 }
 \arguments{
 \item{K}{number of colors}
 
 \item{palette}{name of a palette}
+
+\item{fun}{function used for aggregation}
 }
 \value{
 dataframe with columns k (from 1 to K) and column col

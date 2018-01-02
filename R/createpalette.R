@@ -2,6 +2,7 @@
 #' 
 #' @param K number of colors
 #' @param palette name of a palette
+#' @param fun function used for aggregation
 #' @return dataframe with columns k (from 1 to K) and column col
 #' @export
 #' @examples 
@@ -41,7 +42,7 @@
 #'   geom_point(size=4) +
 #'   scale_colour_gretchenalbrecht("rocker") +
 #'   theme_bw() + theme(aspect.ratio=1)
-get_pal <- function(K, palette = "changes") {
+get_pal <- function(K, palette = "changes", fun=median) {
   library(tidyverse)
   
   if (is.character(palette)) {
@@ -59,9 +60,9 @@ get_pal <- function(K, palette = "changes") {
 # get cluster object by name
 subframe$k <- cutree(clust, k=K)
 tiles <- subframe %>% group_by(k) %>% summarize(
-  red=median(red),
-  blue=median(blue),
-  green=median(green)
+  red=fun(red),
+  blue=fun(blue),
+  green=fun(green)
 ) %>% mutate(
   col = rgb(red/255, green/255, blue/255)
 )
